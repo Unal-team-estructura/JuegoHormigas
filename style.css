@@ -1,96 +1,92 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: #3e2723;
+    background: #2D1E19; /* Fondo más oscuro para resaltar UI */
     color: white;
     font-family: 'Roboto', sans-serif;
 }
 
-canvas {
-    display: block;
-    cursor: crosshair;
-}
+canvas { display: block; cursor: default; }
 
-/* Panel de Información (Top Left) */
-#ui-info {
+/* Layout Superior */
+#ui-top {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0, 0, 0, 0.6);
+    top: 0; left: 0; right: 0;
     padding: 15px;
-    border-radius: 10px;
-    border-left: 4px solid #4CAF50;
-    pointer-events: none; /* Permite clickear a través del panel */
-}
-
-#ui-info h3 { margin: 0 0 5px 0; color: #81C784; }
-#ui-info small { color: #aaa; font-size: 0.8rem; }
-
-/* Panel de Sistema (Top Right) */
-#ui-system {
-    position: absolute;
-    top: 20px;
-    right: 20px;
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
+    pointer-events: none; /* Dejar pasar clicks al canvas */
 }
 
-/* Barra de Acciones (Bottom Center) */
-#ui-actions {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%); /* Truco para centrar perfectamente */
-    background: rgba(30, 30, 30, 0.9);
+#ui-info, #ui-system { pointer-events: auto; } /* Reactivar clicks en botones */
+
+#ui-info {
+    background: rgba(0,0,0,0.6);
     padding: 10px 20px;
-    border-radius: 50px; /* Bordes redondeados */
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+}
+
+/* Barra de Herramientas Inferior */
+#toolbar-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     gap: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    background: rgba(30, 25, 25, 0.95);
+    padding: 10px 20px;
+    border-radius: 12px;
     border: 1px solid #5d4037;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
-/* Estilos de Botones */
+.tool-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.tool-group small {
+    font-size: 0.7rem;
+    color: #aaa;
+    letter-spacing: 1px;
+}
+
+.btn-row { display: flex; gap: 5px; }
+
+/* Botones Genéricos */
 button {
     cursor: pointer;
     border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
     font-weight: bold;
-    font-family: inherit;
-    transition: all 0.2s;
+    font-size: 0.9rem;
+    transition: all 0.1s;
+    background: #4E342E;
+    color: #ccc;
+    border: 1px solid #3E2723;
 }
 
-/* Botones de Sistema */
-.btn-sys {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    padding: 8px 15px;
-    border-radius: 5px;
-    border: 1px solid rgba(255,255,255,0.2);
-}
-.btn-sys:hover { background: rgba(255, 255, 255, 0.2); }
+button:hover { background: #6D4C41; color: white; }
 
-/* Botones de Acción Principal */
-.btn-action {
-    background: #FF9800;
+/* Estilo para Herramienta ACTIVA */
+.btn-tool.activo {
+    background: #FFB74D;
     color: #3E2723;
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-size: 1rem;
-    box-shadow: 0 4px 0 #E65100; /* Efecto 3D */
+    border-color: #FF9800;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
+    transform: translateY(-2px);
 }
-.btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #E65100; }
-.btn-action:active { transform: translateY(2px); box-shadow: 0 0 0 #E65100; }
 
-/* Variantes de color */
-.btn-danger {
-    background: #D32F2F;
-    color: white;
-    box-shadow: 0 4px 0 #B71C1C;
-}
-.btn-danger:hover { box-shadow: 0 6px 0 #B71C1C; }
+/* Botones Especiales */
+.btn-red:hover { background: #D32F2F; color: white; }
+.btn-red.activo { background: #D32F2F; color: white; border-color: #ff5252; }
 
-.btn-warn {
-    background: #5D4037;
-    color: #aaa;
-    box-shadow: 0 4px 0 #3E2723;
-}
+.btn-action { background: #4CAF50; color: white; }
+.btn-action:active { transform: scale(0.95); }
+
+.btn-danger { background: #c62828; color: white; }

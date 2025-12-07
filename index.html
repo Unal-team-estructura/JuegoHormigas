@@ -3,31 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandbox Hormigas</title>
+    <title>Sandbox Hormigas - Constructor</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="ui-info">
-        <h3>Colonia</h3>
-        <div id="stats">Cargando...</div>
-        <small>Click izq: Crear/Seleccionar Cámara</small>
+    <div id="ui-top">
+        <div id="ui-info">
+            <h3>Colonia</h3>
+            <div id="stats">Esperando...</div>
+        </div>
+        <div id="ui-system">
+            <button onclick="guardarPartida()" class="btn-sys">💾 Guardar</button>
+            <button onclick="cargarPartida()" class="btn-sys">📂 Cargar</button>
+            <button onclick="reiniciarJuego()" class="btn-sys">♻️ Reiniciar</button>
+        </div>
     </div>
 
-    <div id="ui-system">
-        <button onclick="guardarPartida()" class="btn-sys">💾 Guardar</button>
-        <button onclick="cargarPartida()" class="btn-sys">📂 Cargar</button>
-    </div>
+    <div id="toolbar-container">
+        
+        <div class="tool-group">
+            <small>EDICIÓN</small>
+            <div class="btn-row">
+                <button onclick="setHerramienta('cursor')" id="btn-cursor" class="btn-tool activo">👆 Mover</button>
+                <button onclick="setHerramienta('conectar')" id="btn-conectar" class="btn-tool">🔗 Conectar</button>
+                <button onclick="setHerramienta('borrar')" id="btn-borrar" class="btn-tool btn-red">❌ Borrar</button>
+            </div>
+        </div>
 
-    <div id="ui-actions">
-        <button onclick="agregarHormiga()" class="btn-action">🐜 + Larva</button>
-        <button onclick="agregarDepredador()" class="btn-action btn-danger">🕷️ + Depredador</button>
-        <button onclick="reiniciarJuego()" class="btn-action btn-warn">♻️ Reiniciar</button>
+        <div class="tool-group">
+            <small>CONSTRUIR SALAS</small>
+            <div class="btn-row">
+                <button onclick="setHerramienta('crear-normal')" id="btn-crear-normal" class="btn-tool">🟤 Pasillo</button>
+                <button onclick="setHerramienta('crear-comida')" id="btn-crear-comida" class="btn-tool">🟢 Comida</button>
+                <button onclick="setHerramienta('crear-agua')" id="btn-crear-agua" class="btn-tool">🔵 Agua</button>
+                <button onclick="setHerramienta('crear-huevos')" id="btn-crear-huevos" class="btn-tool">🟣 Reina</button>
+            </div>
+        </div>
+
+        <div class="tool-group">
+            <small>POBLACIÓN</small>
+            <div class="btn-row">
+                <button onclick="agregarHormiga()" class="btn-action">🐜 +Larva</button>
+                <button onclick="agregarDepredador()" class="btn-action btn-danger">🕷️ +Araña</button>
+            </div>
+        </div>
     </div>
 
     <canvas id="lienzo"></canvas>
-
     <script src="script.js"></script>
 </body>
 </html>
