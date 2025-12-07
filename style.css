@@ -1,48 +1,96 @@
 body {
     margin: 0;
-    overflow: hidden; /* Evita barras de desplazamiento */
-    background: #3e2723; /* Color tierra oscuro */
+    overflow: hidden;
+    background: #3e2723;
     color: white;
-    font-family: sans-serif;
+    font-family: 'Roboto', sans-serif;
 }
 
 canvas {
     display: block;
+    cursor: crosshair;
 }
 
-#ui {
+/* Panel de Información (Top Left) */
+#ui-info {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(0, 0, 0, 0.7); /* Fondo semitransparente */
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.6);
     padding: 15px;
-    border-radius: 8px;
+    border-radius: 10px;
+    border-left: 4px solid #4CAF50;
+    pointer-events: none; /* Permite clickear a través del panel */
+}
+
+#ui-info h3 { margin: 0 0 5px 0; color: #81C784; }
+#ui-info small { color: #aaa; font-size: 0.8rem; }
+
+/* Panel de Sistema (Top Right) */
+#ui-system {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Barra de Acciones (Bottom Center) */
+#ui-actions {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%); /* Truco para centrar perfectamente */
+    background: rgba(30, 30, 30, 0.9);
+    padding: 10px 20px;
+    border-radius: 50px; /* Bordes redondeados */
+    display: flex;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     border: 1px solid #5d4037;
-    user-select: none; /* Evita que se seleccione el texto al hacer click rápido */
 }
 
-h3 {
-    margin-top: 0;
-    color: #FFCC80;
-}
-
+/* Estilos de Botones */
 button {
     cursor: pointer;
-    padding: 8px 12px;
-    margin: 4px;
-    background-color: #6D4C41;
-    color: white;
     border: none;
-    border-radius: 4px;
-    transition: background 0.2s;
-}
-
-button:hover {
-    background-color: #8D6E63;
-}
-
-#info {
-    margin-top: 10px;
     font-weight: bold;
-    color: #81C784;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+/* Botones de Sistema */
+.btn-sys {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.btn-sys:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* Botones de Acción Principal */
+.btn-action {
+    background: #FF9800;
+    color: #3E2723;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 1rem;
+    box-shadow: 0 4px 0 #E65100; /* Efecto 3D */
+}
+.btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #E65100; }
+.btn-action:active { transform: translateY(2px); box-shadow: 0 0 0 #E65100; }
+
+/* Variantes de color */
+.btn-danger {
+    background: #D32F2F;
+    color: white;
+    box-shadow: 0 4px 0 #B71C1C;
+}
+.btn-danger:hover { box-shadow: 0 6px 0 #B71C1C; }
+
+.btn-warn {
+    background: #5D4037;
+    color: #aaa;
+    box-shadow: 0 4px 0 #3E2723;
 }

@@ -1,119 +1,209 @@
-/**
- * CONFIGURACIÓN Y UTILIDADES
- */
+/** CONFIGURACIÓN */
 const canvas = document.getElementById('lienzo');
 const ctx = canvas.getContext('2d');
 
-// Ajustar el canvas al tamaño de la ventana
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const ajustarCanvas = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+};
+ajustarCanvas();
+window.addEventListener('resize', ajustarCanvas);
 
-// Función matemática para calcular distancia entre dos puntos
 const distancia = (x1, y1, x2, y2) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+const angulo = (x1, y1, x2, y2) => Math.atan2(y2 - y1, x2 - x1);
 
-/**
- * CLASES DEL JUEGO
- */
+/** CLASES */
 
-// Representa una Cámara (Nodo del Grafo)
 class Camara {
     constructor(x, y, tipo = 'normal') {
-        this.id = Date.now() + Math.random(); // ID único
+        this.id = Date.now() + Math.random();
         this.x = x;
         this.y = y;
-        this.radio = 20;
-        this.tipo = tipo; // 'comida', 'agua', 'huevos', 'desechos', 'normal'
-        this.conexiones = []; // Lista de otros nodos conectados (aristas)
+        this.radio = tipo === 'reina' ? 35 : 25;
+        this.tipo = tipo; 
+        this.conexiones = []; 
     }
 
-    dibujar() {
-        // Dibujar conexiones (Aristas)
-        ctx.strokeStyle = '#D7CCC8';
-        ctx.lineWidth = 3;
+    dibujarTuneles() {
+        ctx.lineWidth = 14; // Túneles un poco más gruesos
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#4E342E'; // Color tierra oscuro base
+        
         this.conexiones.forEach(nodo => {
-            ctx.beginPath();
-            ctx.moveTo(this.x, this.y);
-            ctx.lineTo(nodo.x, nodo.y);
-            ctx.stroke();
+            if(nodo) {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(nodo.x, nodo.y);
+                ctx.stroke();
+            }
         });
 
-        // Dibujar el nodo
+        // Detalle interior del túnel
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = '#3E2723'; 
+        this.conexiones.forEach(nodo => {
+            if(nodo) {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(nodo.x, nodo.y);
+                ctx.stroke();
+            }
+        });
+    }
+
+    dibujarNodo() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
         
-        // Color según tipo
-        if(this.tipo === 'comida') ctx.fillStyle = '#4CAF50';
-        else if(this.tipo === 'agua') ctx.fillStyle = '#2196F3';
-        else if(this.tipo === 'huevos') ctx.fillStyle = '#FFEB3B';
-        else ctx.fillStyle = '#8D6E63'; 
+        switch(this.tipo) {
+            case 'reina': ctx.fillStyle = '#9C27B0'; break;
+            case 'comida': ctx.fillStyle = '#4CAF50'; break;
+            case 'agua': ctx.fillStyle = '#03A9F4'; break;
+            case 'desechos': ctx.fillStyle = '#607D8B'; break;
+            default: ctx.fillStyle = '#795548';
+        }
         
         ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#3E2723';
+        ctx.lineWidth = 4;
         ctx.stroke();
+
+        // Icono o texto
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.tipo.toUpperCase(), this.x, this.y + 4);
     }
 }
 
-// La protagonista
 class Hormiga {
-    constructor(nodoInicio) {
-        this.x = nodoInicio.x;
-        this.y = nodoInicio.y;
-        this.nodoActual = nodoInicio;
-        this.destino = null; 
-        this.velocidad = 1.5;
-        
-        // Vida simulada (aprox 2 mins a 60fps)
-        this.vidaMax = 7200; 
-        this.vida = this.vidaMax;
-        this.viva = true;
+    constructor(nodoInicio, tipo = 'obrera') {
+        this.inicializar(nodoInicio, tipo);
     }
 
-    actualizar() {
+    inicializar(nodoInicio, tipo) {
+        this.x = this.x || nodoInicio.x;
+        this.y = this.y || nodoInicio.y;
+        this.nodoActual = nodoInicio;
+        this.destino = null; 
+        this.tipo = tipo;
+        this.angulo = 0;
+        this.viva = true;
+
+        if (this.tipo === 'luchadora') {
+            this.velocidad = 1.2; // Un poco más rápidas que antes
+            this.vida = 120;
+            this.daño = 2.5; // Más daño
+            this.color = '#C62828';
+            this.radio = 6;
+        } else if (this.tipo === 'larva') {
+            this.velocidad = 0;
+            this.vida = 20;
+            this.daño = 0;
+            this.color = '#FFF9C4';
+            this.radio = 4;
+            this.tiempoCrecimiento = 300; 
+        } else {
+            this.velocidad = 1.8;
+            this.vida = 60;
+            this.daño = 0.5;
+            this.color = '#212121';
+            this.radio = 4;
+        }
+    }
+
+    actualizar(depredadores) {
         if (!this.viva) return;
-        
-        // Envejecimiento
-        this.vida--;
-        if (this.vida <= 0) {
-            this.morir();
-            return;
+
+        // Larva
+        if (this.tipo === 'larva') {
+            this.tiempoCrecimiento--;
+            if (this.tiempoCrecimiento <= 0) {
+                const nuevoTipo = Math.random() > 0.6 ? 'luchadora' : 'obrera'; // 40% chance de soldado
+                this.inicializar(this.nodoActual, nuevoTipo);
+            }
+            return; 
         }
 
-        // IA Básica: Movimiento aleatorio
-        if (!this.destino && this.nodoActual.conexiones.length > 0) {
-            const indice = Math.floor(Math.random() * this.nodoActual.conexiones.length);
-            this.destino = this.nodoActual.conexiones[indice];
+        // Combate
+        if (this.tipo === 'luchadora') {
+            let enemigoCerca = null;
+            for (let d of depredadores) {
+                if (d.vida > 0 && distancia(this.x, this.y, d.x, d.y) < 180) { // Rango de visión
+                    enemigoCerca = d;
+                    break;
+                }
+            }
+
+            if (enemigoCerca) {
+                this.destino = { x: enemigoCerca.x, y: enemigoCerca.y, esEnemigo: true };
+                if (distancia(this.x, this.y, enemigoCerca.x, enemigoCerca.y) < 20) {
+                    enemigoCerca.recibirDaño(this.daño);
+                }
+            } else if (this.destino && this.destino.esEnemigo) {
+                this.destino = null; 
+            }
         }
 
-        // Moverse hacia el destino
+        // Movimiento Grafo
+        if (!this.destino && this.nodoActual && this.nodoActual.conexiones && this.nodoActual.conexiones.length > 0) {
+             const indice = Math.floor(Math.random() * this.nodoActual.conexiones.length);
+             this.destino = this.nodoActual.conexiones[indice];
+        }
+
+        this.mover();
+    }
+
+    mover() {
         if (this.destino) {
-            const dx = this.destino.x - this.x;
-            const dy = this.destino.y - this.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            const d = distancia(this.x, this.y, this.destino.x, this.destino.y);
 
-            if (dist < this.velocidad) {
-                this.x = this.destino.x;
-                this.y = this.destino.y;
-                this.nodoActual = this.destino;
+            if (d < 5) {
+                if (this.destino instanceof Camara) {
+                    this.nodoActual = this.destino;
+                }
                 this.destino = null;
-            } else {
-                this.x += (dx / dist) * this.velocidad;
-                this.y += (dy / dist) * this.velocidad;
+                return;
+            }
+
+            if (d > 0) {
+                this.angulo = angulo(this.x, this.y, this.destino.x, this.destino.y);
+                this.x += Math.cos(this.angulo) * this.velocidad;
+                this.y += Math.sin(this.angulo) * this.velocidad;
             }
         }
     }
 
     dibujar() {
         if (!this.viva) return;
-        ctx.fillStyle = 'black';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        if (this.tipo !== 'larva') {
+            ctx.rotate(this.angulo);
+            ctx.fillStyle = this.color;
+            // Cuerpo
+            ctx.beginPath(); ctx.arc(-6, 0, this.radio, 0, Math.PI*2); ctx.fill(); // Abdomen
+            ctx.beginPath(); ctx.arc(0, 0, this.radio * 0.8, 0, Math.PI*2); ctx.fill(); // Torax
+            ctx.beginPath(); ctx.arc(5, 0, this.radio * 0.7, 0, Math.PI*2); ctx.fill(); // Cabeza
+            // Patas
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(-6, -8); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-2, 2); ctx.lineTo(-6, 8); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(2, -2); ctx.lineTo(6, -8); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(2, 2); ctx.lineTo(6, 8); ctx.stroke();
+        } else {
+            ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.ellipse(0, 0, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#CCC'; ctx.stroke();
+        }
+        ctx.restore();
     }
-
-    morir() {
-        this.viva = false;
-        console.log("Una hormiga ha muerto de vieja.");
+    
+    recibirDaño(cantidad) {
+        this.vida -= cantidad;
+        if(this.vida <= 0) this.viva = false;
     }
 }
 
@@ -121,17 +211,21 @@ class Depredador {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.radio = 8;
-        this.velocidad = 0.8;
+        this.vida = 80; // <--- VIDA REDUCIDA (Antes 200)
+        this.vidaMax = 80;
+        this.velocidad = 0.8; 
+        this.daño = 50;
+        this.radio = 15;
     }
 
     actualizar(hormigas) {
+        if (this.vida <= 0) return;
+
         let masCercana = null;
         let distMin = 99999;
 
-        // Buscar presa
         hormigas.forEach(h => {
-            if (h.viva) {
+            if (h.viva && h.tipo !== 'larva') {
                 const d = distancia(this.x, this.y, h.x, h.y);
                 if (d < distMin) {
                     distMin = d;
@@ -140,33 +234,62 @@ class Depredador {
             }
         });
 
-        // Perseguir
+        // Persecución libre (sin túneles, "camina" por encima)
         if (masCercana && distMin < 300) {
-            const dx = masCercana.x - this.x;
-            const dy = masCercana.y - this.y;
-            this.x += (dx / distMin) * this.velocidad;
-            this.y += (dy / distMin) * this.velocidad;
+            const ang = angulo(this.x, this.y, masCercana.x, masCercana.y);
+            this.x += Math.cos(ang) * this.velocidad;
+            this.y += Math.sin(ang) * this.velocidad;
 
-            // Atacar
-            if (distMin < 10) {
-                masCercana.viva = false;
+            if (distMin < this.radio + 5) {
+                masCercana.recibirDaño(this.daño);
             }
         }
     }
 
+    recibirDaño(cantidad) {
+        this.vida -= cantidad;
+    }
+
     dibujar() {
+        if (this.vida <= 0) return;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // Cuerpo Araña
         ctx.fillStyle = '#D32F2F';
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y - 10);
-        ctx.lineTo(this.x - 8, this.y + 8);
-        ctx.lineTo(this.x + 8, this.y + 8);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, this.radio, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#B71C1C'; // Cabeza
+        ctx.beginPath(); ctx.arc(8, 0, this.radio*0.6, 0, Math.PI*2); ctx.fill();
+
+        // Patas Largas
+        ctx.strokeStyle = '#212121';
+        ctx.lineWidth = 2;
+        for(let i=0; i<8; i++){
+            let angle = (i / 4) * Math.PI; 
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            // Patas que se mueven visualmente
+            let largo = 25 + Math.sin(Date.now() * 0.01 + i) * 5; 
+            ctx.lineTo(Math.cos(angle)*largo, Math.sin(angle)*largo);
+            ctx.stroke();
+        }
+        
+        // Barra de vida
+        const porcentaje = Math.max(0, this.vida / this.vidaMax);
+        ctx.fillStyle = 'red';
+        ctx.fillRect(-15, -25, 30, 5);
+        ctx.fillStyle = '#76FF03'; // Verde brillante
+        ctx.fillRect(-15, -25, 30 * porcentaje, 5);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-15, -25, 30, 5);
+        
+        ctx.restore();
     }
 }
 
-/**
- * ESTADO DEL JUEGO
- */
+/** ESTADO DEL JUEGO */
 const juego = {
     camaras: [],
     hormigas: [],
@@ -174,130 +297,151 @@ const juego = {
     seleccionado: null
 };
 
-// Crear hormiguero inicial
-const entrada = new Camara(canvas.width/2, canvas.height/2, 'huevos');
-juego.camaras.push(entrada);
+function iniciarHormiguero() {
+    juego.camaras = [];
+    juego.hormigas = [];
+    juego.depredadores = [];
+    juego.seleccionado = null;
 
-/**
- * BUCLE PRINCIPAL (GAME LOOP)
- */
-function loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
 
-    // Dibujar y actualizar cámaras
-    juego.camaras.forEach(c => c.dibujar());
+    const cReina = new Camara(cx, cy, 'reina');
+    const cComida = new Camara(cx - 150, cy - 80, 'comida');
+    const cAgua = new Camara(cx + 150, cy - 80, 'agua');
+    const cDesechos = new Camara(cx, cy + 150, 'desechos');
+    const cEntrada = new Camara(cx, cy - 200, 'normal');
 
-    // Dibujar y actualizar hormigas
-    juego.hormigas.forEach(h => {
-        h.actualizar();
-        h.dibujar();
-    });
+    const conectar = (a, b) => { a.conexiones.push(b); b.conexiones.push(a); };
+    conectar(cReina, cComida);
+    conectar(cReina, cAgua);
+    conectar(cReina, cDesechos);
+    conectar(cComida, cEntrada);
+    conectar(cAgua, cEntrada);
 
-    // Dibujar y actualizar depredadores
-    juego.depredadores.forEach(d => {
-        d.actualizar(juego.hormigas);
-        d.dibujar();
-    });
+    juego.camaras.push(cReina, cComida, cAgua, cDesechos, cEntrada);
 
-    // Actualizar UI
-    document.getElementById('info').innerText = 
-        `Población: ${juego.hormigas.filter(h=>h.viva).length} | Depredadores: ${juego.depredadores.length}`;
-
-    requestAnimationFrame(loop);
+    for(let i=0; i<5; i++) juego.hormigas.push(new Hormiga(cReina, 'obrera'));
+    for(let i=0; i<3; i++) juego.hormigas.push(new Hormiga(cReina, 'luchadora'));
+    for(let i=0; i<3; i++) juego.hormigas.push(new Hormiga(cReina, 'larva'));
 }
 
-// Iniciar el juego
+iniciarHormiguero();
+
+/** BUCLE */
+function loop() {
+    try {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Dibujar Túneles y Nodos
+        juego.camaras.forEach(c => c.dibujarTuneles());
+        juego.camaras.forEach(c => c.dibujarNodo());
+
+        // Hormigas
+        juego.hormigas = juego.hormigas.filter(h => h.viva);
+        juego.hormigas.forEach(h => {
+            try { h.actualizar(juego.depredadores); h.dibujar(); } 
+            catch (e) { console.error(e); h.viva = false; }
+        });
+
+        // Depredadores
+        juego.depredadores = juego.depredadores.filter(d => d.vida > 0);
+        juego.depredadores.forEach(d => {
+            d.actualizar(juego.hormigas);
+            d.dibujar();
+        });
+
+        // UI Stats
+        const obreras = juego.hormigas.filter(h => h.tipo === 'obrera').length;
+        const soldados = juego.hormigas.filter(h => h.tipo === 'luchadora').length;
+        const larvas = juego.hormigas.filter(h => h.tipo === 'larva').length;
+        
+        document.getElementById('stats').innerHTML = 
+            `🐜 Obreras: ${obreras} | ⚔️ Soldados: ${soldados} | 🐛 Larvas: ${larvas} <br> 🕷️ Amenazas: ${juego.depredadores.length}`;
+
+        requestAnimationFrame(loop);
+
+    } catch (err) {
+        console.error("Error fatal:", err);
+    }
+}
 loop();
 
-/**
- * INTERACCIÓN (INPUTS)
- */
+/** INTERACCIÓN */
 canvas.addEventListener('mousedown', (e) => {
     const x = e.clientX;
     const y = e.clientY;
-
     const clickEnCamara = juego.camaras.find(c => distancia(x, y, c.x, c.y) < c.radio);
 
     if (clickEnCamara) {
         if (juego.seleccionado) {
-            if (juego.seleccionado !== clickEnCamara) {
-                // Crear conexión (Arista)
-                if(!juego.seleccionado.conexiones.includes(clickEnCamara)){
-                    juego.seleccionado.conexiones.push(clickEnCamara);
-                    clickEnCamara.conexiones.push(juego.seleccionado);
-                }
+            if (juego.seleccionado !== clickEnCamara && !juego.seleccionado.conexiones.includes(clickEnCamara)) {
+                juego.seleccionado.conexiones.push(clickEnCamara);
+                clickEnCamara.conexiones.push(juego.seleccionado);
             }
             juego.seleccionado = null;
         } else {
             juego.seleccionado = clickEnCamara;
-            alert(`Cámara seleccionada. Click en otra para conectar.`);
         }
     } else {
-        const tipos = ['comida', 'agua', 'normal'];
-        const tipo = tipos[Math.floor(Math.random() * tipos.length)];
-        juego.camaras.push(new Camara(x, y, tipo));
+        juego.camaras.push(new Camara(x, y, 'normal'));
     }
 });
 
-// Funciones globales para los botones HTML
+// Botones
 window.agregarHormiga = function() {
-    const nido = juego.camaras.find(c => c.tipo === 'huevos') || juego.camaras[0];
-    if (nido) juego.hormigas.push(new Hormiga(nido));
+    const nido = juego.camaras.find(c => c.tipo === 'reina') || juego.camaras[0];
+    if (nido) juego.hormigas.push(new Hormiga(nido, 'larva'));
 };
 
 window.agregarDepredador = function() {
-    juego.depredadores.push(new Depredador(Math.random() * canvas.width, Math.random() * canvas.height));
+    // Aparece lejos del centro para no matar a la reina al instante
+    let x, y;
+    if(Math.random() > 0.5) { x = Math.random() * canvas.width; y = 0; }
+    else { x = 0; y = Math.random() * canvas.height; }
+    
+    juego.depredadores.push(new Depredador(x, y));
+};
+
+window.reiniciarJuego = function() {
+    if(confirm("¿Reiniciar colonia?")) iniciarHormiguero();
 };
 
 window.guardarPartida = function() {
-    const datosGuardar = {
-        camaras: juego.camaras.map(c => ({
-            id: c.id, x: c.x, y: c.y, tipo: c.tipo,
-            conexionesIds: c.conexiones.map(con => con.id)
-        })),
-        hormigas: juego.hormigas.map(h => ({
-            x: h.x, y: h.y, vida: h.vida, 
-            nodoActualId: h.nodoActual.id 
-        })),
-        depredadores: juego.depredadores.map(d => ({ x: d.x, y: d.y }))
+    const datos = {
+        camaras: juego.camaras.map(c => ({ id: c.id, x: c.x, y: c.y, tipo: c.tipo, conexiones: c.conexiones.map(con => con.id) })),
+        hormigas: juego.hormigas.map(h => ({ x: h.x, y: h.y, tipo: h.tipo, vida: h.vida, nodoId: h.nodoActual.id })),
+        depredadores: juego.depredadores.map(d => ({ x: d.x, y: d.y, vida: d.vida }))
     };
-    localStorage.setItem('hormigueroSave', JSON.stringify(datosGuardar));
-    alert('Partida guardada.');
+    localStorage.setItem('hormigueroV3', JSON.stringify(datos));
+    alert("Partida guardada ✅");
 };
 
 window.cargarPartida = function() {
-    const jsonString = localStorage.getItem('hormigueroSave');
-    if (!jsonString) return alert("No hay partida guardada");
+    const raw = localStorage.getItem('hormigueroV3');
+    if(!raw) return alert("No hay datos guardados");
+    const datos = JSON.parse(raw);
     
-    const datos = JSON.parse(jsonString);
-
-    juego.camaras = datos.camaras.map(d => {
-        const c = new Camara(d.x, d.y, d.tipo);
-        c.id = d.id; 
-        return c;
-    });
-
-    datos.camaras.forEach((d, index) => {
-        const camaraReal = juego.camaras[index];
-        d.conexionesIds.forEach(idConectado => {
-            const nodoConectado = juego.camaras.find(c => c.id === idConectado);
-            if(nodoConectado) camaraReal.conexiones.push(nodoConectado);
+    // Reconstruir
+    juego.camaras = datos.camaras.map(d => { const c = new Camara(d.x, d.y, d.tipo); c.id = d.id; return c; });
+    // Reconectar
+    datos.camaras.forEach((d, i) => {
+        d.conexiones.forEach(idCon => {
+            const vecino = juego.camaras.find(c => c.id === idCon);
+            if(vecino) juego.camaras[i].conexiones.push(vecino);
         });
     });
 
     juego.hormigas = datos.hormigas.map(d => {
-        const nodo = juego.camaras.find(c => c.id === d.nodoActualId) || juego.camaras[0];
-        const h = new Hormiga(nodo);
+        const nodo = juego.camaras.find(c => c.id === d.nodoId) || juego.camaras[0];
+        const h = new Hormiga(nodo, d.tipo);
         h.x = d.x; h.y = d.y; h.vida = d.vida;
         return h;
     });
 
-    juego.depredadores = datos.depredadores.map(d => new Depredador(d.x, d.y));
-    alert('Partida cargada.');
+    juego.depredadores = datos.depredadores.map(d => {
+        const dep = new Depredador(d.x, d.y);
+        dep.vida = d.vida;
+        return dep;
+    });
 };
-
-// Ajustar canvas si se cambia el tamaño de la ventana
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});

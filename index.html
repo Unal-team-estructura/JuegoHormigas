@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandbox Hormigas - Grafo</title>
+    <title>Sandbox Hormigas</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="ui">
-        <h3>Controles del Hormiguero</h3>
-        <p>Click en espacio vacío: Crear Cámara</p>
-        <p>Click en cámara: Seleccionar/Conectar</p>
-        <hr>
-        <button onclick="guardarPartida()">Guardar (JSON)</button>
-        <button onclick="cargarPartida()">Cargar (JSON)</button>
-        <button onclick="agregarHormiga()">+ Hormiga</button>
-        <button onclick="agregarDepredador()">+ Depredador</button>
-        <div id="info">Población: 0</div>
+    <div id="ui-info">
+        <h3>Colonia</h3>
+        <div id="stats">Cargando...</div>
+        <small>Click izq: Crear/Seleccionar Cámara</small>
+    </div>
+
+    <div id="ui-system">
+        <button onclick="guardarPartida()" class="btn-sys">💾 Guardar</button>
+        <button onclick="cargarPartida()" class="btn-sys">📂 Cargar</button>
+    </div>
+
+    <div id="ui-actions">
+        <button onclick="agregarHormiga()" class="btn-action">🐜 + Larva</button>
+        <button onclick="agregarDepredador()" class="btn-action btn-danger">🕷️ + Depredador</button>
+        <button onclick="reiniciarJuego()" class="btn-action btn-warn">♻️ Reiniciar</button>
     </div>
 
     <canvas id="lienzo"></canvas>
