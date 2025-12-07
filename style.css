@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    overflow: hidden; /* Evita barras de desplazamiento */
+    background: #3e2723; /* Color tierra oscuro */
+    color: white;
+    font-family: sans-serif;
+}
+
+canvas {
+    display: block;
+}
+
+#ui {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7); /* Fondo semitransparente */
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #5d4037;
+    user-select: none; /* Evita que se seleccione el texto al hacer click rápido */
+}
+
+h3 {
+    margin-top: 0;
+    color: #FFCC80;
+}
+
+button {
+    cursor: pointer;
+    padding: 8px 12px;
+    margin: 4px;
+    background-color: #6D4C41;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: #8D6E63;
+}
+
+#info {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #81C784;
+}

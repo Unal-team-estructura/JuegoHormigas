@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox Hormigas - Grafo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="ui">
+        <h3>Controles del Hormiguero</h3>
+        <p>Click en espacio vacío: Crear Cámara</p>
+        <p>Click en cámara: Seleccionar/Conectar</p>
+        <hr>
+        <button onclick="guardarPartida()">Guardar (JSON)</button>
+        <button onclick="cargarPartida()">Cargar (JSON)</button>
+        <button onclick="agregarHormiga()">+ Hormiga</button>
+        <button onclick="agregarDepredador()">+ Depredador</button>
+        <div id="info">Población: 0</div>
+    </div>
+
+    <canvas id="lienzo"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
