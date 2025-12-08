@@ -2,6 +2,23 @@
 const canvas = document.getElementById('lienzo');
 const ctx = canvas.getContext('2d');
 
+const imgSpider = new Image();
+imgSpider.src = 'assets/spider.png';
+
+// Fondo
+const imgFondo = new Image();
+imgFondo.src = "assets/fondo.png";
+
+// Nodos
+const imgPasillo = new Image();
+imgPasillo.src = "assets/pasillo.png";
+
+const imgComida = new Image();
+imgComida.src = "assets/comida.png";
+
+const imgAgua = new Image();
+imgAgua.src = "assets/agua.png";
+
 const ajustarCanvas = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -15,6 +32,10 @@ const angulo = (x1, y1, x2, y2) => Math.atan2(y2 - y1, x2 - x1);
 /** GESTIÓN DE HERRAMIENTAS */
 let herramientaActual = 'cursor'; // Por defecto no hace nada destructivo
 let nodoOrigenConexion = null; // Para guardar el primer click al conectar
+let animacionesPiedra = [];
+let piedrasFinales = [];
+let imagenPiedra = new Image();
+imagenPiedra.src = 'assets/piedra.png';
 
 // Función llamada por los botones HTML
 window.setHerramienta = function(nombre) {
@@ -31,6 +52,62 @@ window.setHerramienta = function(nombre) {
 };
 
 /** CLASES */
+
+class PiedraAnimada {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+
+        this.alturaInicial = y - 150;   // La piedra "viene desde arriba"
+        this.alturaActual = this.alturaInicial;
+
+        this.escala = 2.0;              // Grande al inicio
+        this.opacidad = 0.2;            // Transparente al inicio
+        this.rotacion = Math.random() * Math.PI * 2;
+
+        this.velocidad = 6;            // Velocidad de caída
+    }
+
+    actualizar() {
+        // Movimiento hacia el nodo
+        if (this.alturaActual < this.y) {
+            this.alturaActual += this.velocidad;
+            this.escala -= 0.02;
+            this.opacidad += 0.05;
+        } else {
+            return true; // Señal de que la animación terminó
+        }
+        return false;
+    }
+
+    dibujar(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.opacidad;
+        ctx.translate(this.x, this.alturaActual);
+        ctx.rotate(this.rotacion);
+        ctx.scale(this.escala, this.escala);
+        ctx.drawImage(imagenPiedra, -32, -32, 64, 64);
+        ctx.restore();
+    }
+}
+
+class PiedraFinal {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.rotacion = Math.random() * Math.PI * 2;
+    }
+
+    dibujar(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotacion);
+        ctx.drawImage(imagenPiedra, -32, -32, 64, 64);
+        ctx.restore();
+    }
+}
+
+
 class Camara {
     constructor(x, y, tipo = 'normal') {
         this.id = Date.now() + Math.random();
@@ -50,40 +127,89 @@ class Camara {
         this.conexiones.forEach(nodo => {
             if(nodo) { ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(nodo.x, nodo.y); ctx.stroke(); }
         });
-        ctx.lineWidth = 10; ctx.strokeStyle = '#3E2723'; 
+        ctx.lineWidth = 10; ctx.strokeStyle = '#1c0f0a'; 
         this.conexiones.forEach(nodo => {
             if(nodo) { ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(nodo.x, nodo.y); ctx.stroke(); }
         });
     }
 
     dibujarNodo() {
-        ctx.beginPath(); ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
-        
-        // Colores
-        switch(this.tipo) {
-            case 'reina': ctx.fillStyle = '#9C27B0'; break;
-            case 'comida': ctx.fillStyle = '#66BB6A'; break;
-            case 'agua': ctx.fillStyle = '#29B6F6'; break;
-            case 'desechos': ctx.fillStyle = '#78909C'; break;
-            default: ctx.fillStyle = '#8D6E63';
-        }
-        
-        // Resaltar si está seleccionado para conectar
-        if(this === nodoOrigenConexion) {
-            ctx.strokeStyle = '#FFEB3B'; ctx.lineWidth = 6;
-        } else {
-            ctx.strokeStyle = '#3E2723'; ctx.lineWidth = 4;
+
+    // --- NODOS con imagen: pasillo, comida, agua ---
+    if (this.tipo === 'pasillo' || this.tipo === 'comida' || this.tipo === 'agua') {
+
+        let img = null;
+
+        if (this.tipo === 'pasillo') img = imgPasillo;
+        if (this.tipo === 'comida')  img = imgComida;
+        if (this.tipo === 'agua')    img = imgAgua;
+
+        if (img) {
+            const size = this.radio * 2;
+            // RECORTE CIRCULAR
+            ctx.save();                // Guardar estado del canvas
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();                // ← Aplica el recorte circular
+
+            ctx.drawImage(img, this.x - this.radio, this.y - this.radio, size, size);
+
+            ctx.restore();             // ← Restablece el canvas sin recorte
         }
 
-        ctx.fill(); ctx.stroke();
-        
-        // Icono texto
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
-        let label = this.tipo.substring(0,3).toUpperCase();
-        if(this.tipo === 'reina') label = '👑';
-        ctx.fillText(label, this.x, this.y + 4);
+        // borde si este nodo es origen de una conexión
+        if (this === nodoOrigenConexion) {
+            ctx.strokeStyle = '#FFEB3B';
+            ctx.lineWidth = 6;
+        } else {
+            ctx.strokeStyle = '#1c0f0a';
+            ctx.lineWidth = 4;
+        }
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
+        ctx.stroke();
+
+        return; 
     }
+
+
+
+    // --- NODOS NORMALES (reina, desechos, etc) ---
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
+
+    // Colores
+    switch (this.tipo) {
+        case 'reina': ctx.fillStyle = '#9C27B0'; break;
+        case 'desechos': ctx.fillStyle = '#78909C'; break;
+        default: ctx.fillStyle = '#8D6E63'; // <- este no es el fondo, es el color de pasillo antiguo
+    }
+
+    // Borde de selección (conectar)
+    if (this === nodoOrigenConexion) {
+        ctx.strokeStyle = '#FFEB3B';
+        ctx.lineWidth = 6;
+    } else {
+        ctx.strokeStyle = '#1c0f0a';
+        ctx.lineWidth = 4;
+    }
+
+    ctx.fill();
+    ctx.stroke();
+
+    // Texto / icono
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+
+    let label = this.tipo.substring(0, 3).toUpperCase();
+    if (this.tipo === 'reina') label = '👑';
+
+    ctx.fillText(label, this.x, this.y + 4);
+}
+
 }
 
 class Hormiga {
@@ -177,35 +303,78 @@ class Hormiga {
 
 class Depredador {
     constructor(x, y) {
-        this.x = x; this.y = y; this.vida = 80; this.vidaMax = 80;
-        this.velocidad = 0.8; this.daño = 50; this.radio = 15;
+        this.x = x; 
+        this.y = y;
+        this.vida = 80; 
+        this.vidaMax = 80;
+        this.velocidad = 0.8; 
+        this.daño = 50; 
+        this.radio = 30;
+
+        this.objetivo = null;  // para saber hacia quién gira
     }
+
     actualizar(hormigas) {
         if (this.vida <= 0) return;
+
         let masCercana = null, distMin = 99999;
+
         hormigas.forEach(h => {
             if (h.viva && h.tipo !== 'larva') {
                 const d = distancia(this.x, this.y, h.x, h.y);
-                if (d < distMin) { distMin = d; masCercana = h; }
+                if (d < distMin) {
+                    distMin = d;
+                    masCercana = h;
+                }
             }
         });
+
+        this.objetivo = masCercana; // GUARDAR objetivo para la rotación
+
         if (masCercana && distMin < 300) {
             const ang = angulo(this.x, this.y, masCercana.x, masCercana.y);
             this.x += Math.cos(ang) * this.velocidad;
             this.y += Math.sin(ang) * this.velocidad;
-            if (distMin < this.radio + 5) masCercana.recibirDaño(this.daño);
+
+            if (distMin < this.radio + 5)
+                masCercana.recibirDaño(this.daño);
         }
     }
-    recibirDaño(c) { this.vida -= c; }
+
+    recibirDaño(c) { 
+        this.vida -= c; 
+    }
+
     dibujar() {
         if (this.vida <= 0) return;
-        ctx.save(); ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#D32F2F'; ctx.beginPath(); ctx.arc(0, 0, this.radio, 0, Math.PI*2); ctx.fill();
-        // Barra vida
-        const p = Math.max(0, this.vida / this.vidaMax);
-        ctx.fillStyle = 'red'; ctx.fillRect(-15, -25, 30, 5);
-        ctx.fillStyle = '#76FF03'; ctx.fillRect(-15, -25, 30 * p, 5);
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // --- ROTACIÓN DEPENDIENDO DEL OBJETIVO ---
+        let anguloRot = 0;
+        if (this.objetivo) {
+            const dx = this.objetivo.x - this.x;
+            const dy = this.objetivo.y - this.y;
+            anguloRot = Math.atan2(dy, dx) + Math.PI / 2;  
+            // +90° porque tu sprite mira hacia abajo
+        }
+        ctx.rotate(anguloRot);
+
+        // --- DIBUJAR SPRITE ---
+        const size = this.radio * 2; 
+        ctx.drawImage(imgSpider, -size / 2, -size / 2, size, size);
+
         ctx.restore();
+
+        // --- BARRA DE VIDA ---
+        const p = Math.max(0, this.vida / this.vidaMax);
+
+        ctx.fillStyle = 'red';
+        ctx.fillRect(this.x - 15, this.y - this.radio - 18, 30, 5);
+
+        ctx.fillStyle = '#76FF03';
+        ctx.fillRect(this.x - 15, this.y - this.radio - 18, 30 * p, 5);
     }
 }
 
@@ -226,6 +395,7 @@ iniciarHormiguero();
 /** BUCLE */
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgFondo, 0, 0, canvas.width, canvas.height);
     // Dibujo
     juego.camaras.forEach(c => c.dibujarTuneles());
     juego.camaras.forEach(c => c.dibujarNodo());
@@ -246,9 +416,38 @@ function loop() {
     // UI
     document.getElementById('stats').innerHTML = 
         `🐜: ${juego.hormigas.length} | 🕷️: ${juego.depredadores.length} | 🏭: ${juego.camaras.length}`;
+    
+    // 🔥 ANIMACIÓN DE PIEDRAS AL BORRAR NODOS
+    // Ejecutar animaciones activas
+    animacionesPiedra = animacionesPiedra.filter(anim => {
+        anim.dibujar(ctx);
+        const terminada = anim.actualizar();
+        if (terminada) {
+            // Guardar piedra final en el suelo
+            piedrasFinales.push(new PiedraFinal(anim.x, anim.y));
+        }
+        return !terminada;
+    });
+
+    // Dibujar piedras ya caídas
+    piedrasFinales.forEach(p => p.dibujar(ctx));
+
+    // 🔥 ELIMINAR NODOS AL FINAL DE LA ANIMACIÓN
+    juego.camaras = juego.camaras.filter(c => {
+        if (c.eliminarPendiente && !animacionesPiedra.some(a => a.x === c.x && a.y === c.y)) {
+            // Eliminar conexiones hacia él
+            juego.camaras.forEach(cam => {
+                cam.conexiones = cam.conexiones.filter(n => n !== c);
+            });
+            return false; // Eliminar nodo
+        }
+        return true;
+    });
+
     requestAnimationFrame(loop);
 }
 loop();
+
 
 /** * LÓGICA DE INTERACCIÓN PRINCIPAL 
  * Aquí es donde los botones cambian el comportamiento del click
@@ -293,16 +492,9 @@ canvas.addEventListener('mousedown', (e) => {
 
         case 'borrar':
             if (nodoClickeado) {
-                // 1. Eliminar nodo del array
-                juego.camaras = juego.camaras.filter(c => c !== nodoClickeado);
-                // 2. Eliminar conexiones en OTROS nodos hacia este
-                juego.camaras.forEach(c => {
-                    c.conexiones = c.conexiones.filter(con => con !== nodoClickeado);
-                });
-                // 3. Matar hormigas que estuvieran en ese nodo
-                juego.hormigas.forEach(h => {
-                    if(h.nodoActual === nodoClickeado) h.viva = false;
-                });
+            animacionesPiedra.push(new PiedraAnimada(nodoClickeado.x, nodoClickeado.y));
+            let nodoAEliminar = nodoClickeado;
+            nodoAEliminar.eliminarPendiente = true;
             }
             if (depClickeado) {
                 depClickeado.vida = 0; // Matar depredador
