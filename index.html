@@ -3,50 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandbox Hormigas - Constructor</title>
+    <title>Colonia Pixel: Defensa Total</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="ui-top">
-        <div id="ui-info">
-            <h3>Colonia</h3>
-            <div id="stats">Esperando...</div>
+    <div id="game-overlay">
+        <div id="menu-content" class="pixel-box">
+            <h1 class="pixel-title">🐜 LA COLONIA 🕷️</h1>
+            <p class="subtitle">DEFEND THE QUEEN</p>
+            
+            <div id="tutorial-box">
+                <h4>:: INSTRUCCIONES ::</h4>
+                <ul>
+                    <li>[ REINA ] Si muere, GAME OVER.</li>
+                    <li>[ OBRERAS ] Recolectan recursos.</li>
+                    <li>[ SOLDADOS ] Eliminan arañas.</li>
+                    <li>[ ARAÑAS ] Buscan soldados y la reina.</li>
+                </ul>
+            </div>
+
+            <button onclick="iniciarJuegoUI()" class="btn-pixel start-btn">PRESS START</button>
         </div>
-        <div id="ui-system">
-            <button onclick="guardarPartida()" class="btn-sys">💾 Guardar</button>
-            <button onclick="cargarPartida()" class="btn-sys">📂 Cargar</button>
-            <button onclick="reiniciarJuego()" class="btn-sys">♻️ Reiniciar</button>
+        
+        <div id="game-over-content" class="hidden pixel-box">
+            <h1 style="color: #ff5252;">💀 GAME OVER 💀</h1>
+            <p>LA REINA HA CAIDO</p>
+            <button onclick="location.reload()" class="btn-pixel">RETRY</button>
+        </div>
+
+        <div id="victory-content" class="hidden pixel-box">
+            <h1 style="color: #ffd700;">🏆 VICTORIA 🏆</h1>
+            <p>COLONIA SEGURA</p>
+            <button onclick="location.reload()" class="btn-pixel">PLAY AGAIN</button>
         </div>
     </div>
 
-    <div id="toolbar-container">
-        
-        <div class="tool-group">
-            <small>EDICIÓN</small>
-            <div class="btn-row">
-                <button onclick="setHerramienta('cursor')" id="btn-cursor" class="btn-tool activo">👆 Mover</button>
-                <button onclick="setHerramienta('conectar')" id="btn-conectar" class="btn-tool">🔗 Conectar</button>
-                <button onclick="setHerramienta('borrar')" id="btn-borrar" class="btn-tool btn-red">❌ Borrar</button>
+    <div id="game-ui" class="hidden">
+        <div id="ui-top">
+            <div id="ui-info" class="pixel-panel">
+                <h3>COLONIA STATUS</h3>
+                <div id="recursos-display">🍃 20 | 💧 20</div>
+                <div id="wave-info">
+                    WAVE: <span id="wave-count">1</span>/5 <br> TIME: <span id="wave-timer">90</span>s
+                </div>
+                <div id="stats" style="margin-top:5px; font-size:0.8rem; color:#aaa">...</div>
+            </div>
+            <div id="ui-system">
+                <button onclick="guardarPartida()" class="btn-sys">SAVE</button>
+                <button onclick="cargarPartida()" class="btn-sys">LOAD</button>
+                <button onclick="location.reload()" class="btn-sys">EXIT</button>
             </div>
         </div>
 
-        <div class="tool-group">
-            <small>CONSTRUIR SALAS</small>
-            <div class="btn-row">
-                <button onclick="setHerramienta('crear-normal')" id="btn-crear-normal" class="btn-tool">🟤 Pasillo</button>
-                <button onclick="setHerramienta('crear-comida')" id="btn-crear-comida" class="btn-tool">🟢 Comida</button>
-                <button onclick="setHerramienta('crear-agua')" id="btn-crear-agua" class="btn-tool">🔵 Agua</button>
-                <button onclick="setHerramienta('crear-huevos')" id="btn-crear-huevos" class="btn-tool">🟣 Reina</button>
+        <div id="toolbar-container" class="pixel-panel">
+            <div class="tool-group">
+                <small>TOOLS</small>
+                <div class="btn-row">
+                    <button onclick="setHerramienta('cursor')" id="btn-cursor" class="btn-tool activo">MOVE</button>
+                    <button onclick="setHerramienta('conectar')" id="btn-conectar" class="btn-tool">LINK</button>
+                    <button onclick="setHerramienta('borrar')" id="btn-borrar" class="btn-tool btn-red">DEL</button>
+                </div>
             </div>
-        </div>
 
-        <div class="tool-group">
-            <small>POBLACIÓN</small>
-            <div class="btn-row">
-                <button onclick="agregarHormiga()" class="btn-action">🐜 +Larva</button>
-                <button onclick="agregarDepredador()" class="btn-action btn-danger">🕷️ +Araña</button>
+            <div class="tool-group">
+                <small>BUILD</small>
+                <div class="btn-row">
+                    <button onclick="setHerramienta('crear-normal')" id="btn-crear-normal" class="btn-tool">HALL</button>
+                    <button onclick="setHerramienta('crear-comida')" id="btn-crear-comida" class="btn-tool" style="color:#4CAF50">FOOD</button>
+                    <button onclick="setHerramienta('crear-agua')" id="btn-crear-agua" class="btn-tool" style="color:#2196F3">H2O</button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <small>SPAWN (3🍃 3💧)</small>
+                <div class="btn-row">
+                    <button onclick="agregarHormiga('obrera')" class="btn-action">WORKER</button>
+                    <button onclick="agregarHormiga('luchadora')" class="btn-action btn-soldier">SOLDIER</button>
+                </div>
             </div>
         </div>
     </div>
