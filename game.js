@@ -373,16 +373,25 @@ const game = {
     },
     
     previewCiv: function(elementId, color) {
-        let elem = document.getElementById(elementId);
-        if(elem) {
-            let canvas = elem.querySelector('canvas') || document.createElement('canvas');
-            canvas.width = 70;
-            canvas.height = 70;
+        let canvas = document.getElementById(elementId);
+        
+        if(canvas) {
             let ctx = canvas.getContext('2d');
+            // Limpiar fondo (Gris oscuro para que contraste)
             ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, 70, 70);
-            this.drawSprite(ctx, 'queen', color, 35, 35, 40);
-            if(!elem.querySelector('canvas')) elem.appendChild(canvas);
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Lista de unidades a mostrar
+            const units = ['worker', 'soldier', 'tank', 'medic', 'queen'];
+            
+            // Dibujarlas en fila
+            let startX = 25;
+            let gap = 40; // Espacio entre hormigas
+
+            units.forEach((u, i) => {
+                // Dibujamos cada una desplazada en X
+                this.drawSprite(ctx, u, color, startX + (i * gap), 25, 20); 
+            });
         }
     }
 };
