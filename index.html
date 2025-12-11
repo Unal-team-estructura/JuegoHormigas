@@ -3,90 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colonia Pixel: Defensa Total</title>
+    <title>ANT WARS IO: PIXEL REMASTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="game-overlay">
-        <div id="menu-content" class="pixel-box">
-            <h1 class="pixel-title">🐜 LA COLONIA 🕷️</h1>
-            <p class="subtitle">DEFEND THE QUEEN</p>
-            
-            <div id="tutorial-box">
-                <h4>:: INSTRUCCIONES ::</h4>
-                <ul>
-                    <li>[ REINA ] Si muere, GAME OVER.</li>
-                    <li>[ OBRERAS ] Recolectan recursos.</li>
-                    <li>[ SOLDADOS ] Eliminan arañas.</li>
-                    <li>[ ARAÑAS ] Buscan soldados y la reina.</li>
-                </ul>
-            </div>
-
-            <button onclick="iniciarJuegoUI()" class="btn-pixel start-btn">PRESS START</button>
-        </div>
+    <div id="start-screen" class="screen">
+        <h1>ANT WARS IO</h1>
+        <p class="subtitle">Elige tu Especie</p>
         
-        <div id="game-over-content" class="hidden pixel-box">
-            <h1 style="color: #ff5252;">💀 GAME OVER 💀</h1>
-            <p>LA REINA HA CAIDO</p>
-            <button onclick="location.reload()" class="btn-pixel">RETRY</button>
+        <div class="civ-container">
+            <div class="civ-card" onclick="game.init('fire')">
+                <div class="civ-title" style="color:#ff5555">🔥 HORMIGAS DE FUEGO</div>
+                <div class="civ-desc">Daño +25%</div>
+                <div class="preview-box">
+                    <canvas id="p-fire" width="100" height="50"></canvas>
+                </div>
+            </div>
+            <div class="civ-card" onclick="game.init('earth')">
+                <div class="civ-title" style="color:#44ff44">🛡️ HORMIGAS LEGIÓN</div>
+                <div class="civ-desc">Vida +35%</div>
+                <div class="preview-box">
+                    <canvas id="p-earth" width="100" height="50"></canvas>
+                </div>
+            </div>
+            <div class="civ-card" onclick="game.init('water')">
+                <div class="civ-title" style="color:#4488ff">💧 HORMIGAS DE RÍO</div>
+                <div class="civ-desc">Velocidad +25%</div>
+                <div class="preview-box">
+                    <canvas id="p-water" width="100" height="50"></canvas>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div id="victory-content" class="hidden pixel-box">
-            <h1 style="color: #ffd700;">🏆 VICTORIA 🏆</h1>
-            <p>COLONIA SEGURA</p>
-            <button onclick="location.reload()" class="btn-pixel">PLAY AGAIN</button>
-        </div>
+    <div id="win-screen" class="screen hidden">
+        <h1 style="color:gold">¡COLONIA SUPREMA!</h1>
+        <button class="big-btn" onclick="location.reload()">CONQUISTAR OTRA VEZ</button>
+    </div>
+    <div id="lose-screen" class="screen hidden">
+        <h1 style="color:red">COLONIA DESTRUIDA</h1>
+        <button class="big-btn" onclick="location.reload()">REINTENTAR</button>
     </div>
 
     <div id="game-ui" class="hidden">
-        <div id="ui-top">
-            <div id="ui-info" class="pixel-panel">
-                <h3>COLONIA STATUS</h3>
-                <div id="recursos-display">🍃 20 | 💧 20</div>
-                <div id="wave-info">
-                    WAVE: <span id="wave-count">1</span>/5 <br> TIME: <span id="wave-timer">90</span>s
-                </div>
-                <div id="stats" style="margin-top:5px; font-size:0.8rem; color:#aaa">...</div>
-            </div>
-            <div id="ui-system">
-                <button onclick="guardarPartida()" class="btn-sys">SAVE</button>
-                <button onclick="cargarPartida()" class="btn-sys">LOAD</button>
-                <button onclick="location.reload()" class="btn-sys">EXIT</button>
-            </div>
+        
+        <div class="top-bar">
+            <div class="res" style="color:#5f5">🍃 <span id="ui-l">0</span></div>
+            <div class="res" style="color:#5ff">💧 <span id="ui-w">0</span></div>
+            <div class="res" style="color:#d5f">🍄 <span id="ui-f">0</span></div>
+            <div class="lvl-badge">NIVEL <span id="ui-lvl">1</span></div>
         </div>
 
-        <div id="toolbar-container" class="pixel-panel">
-            <div class="tool-group">
-                <small>TOOLS</small>
-                <div class="btn-row">
-                    <button onclick="setHerramienta('cursor')" id="btn-cursor" class="btn-tool activo">MOVE</button>
-                    <button onclick="setHerramienta('conectar')" id="btn-conectar" class="btn-tool">LINK</button>
-                    <button onclick="setHerramienta('borrar')" id="btn-borrar" class="btn-tool btn-red">DEL</button>
+        <div id="barracks-panel" class="side-panel hidden">
+            <div class="panel-header">CUARTEL</div>
+            <button class="recruit-btn" onclick="game.buyUnit('soldier')">
+                <div class="icon-box soldier-icon"></div>
+                <div>SOLDADO</div>
+                <small>5L 5W</small>
+            </button>
+            <button class="recruit-btn" onclick="game.buyUnit('tank')">
+                <div class="icon-box tank-icon"></div>
+                <div>TANQUE</div>
+                <small>8L 8W 2H</small>
+            </button>
+            <button class="recruit-btn" onclick="game.buyUnit('medic')">
+                <div class="icon-box medic-icon"></div>
+                <div>MÉDICO</div>
+                <small>4L 4W 6H</small>
+            </button>
+        </div>
+
+        <div class="minimap-container"><canvas id="minimap" width="120" height="120"></canvas></div>
+
+        <div class="bottom-panel">
+            <div class="panel-sec">
+                <div class="sec-title">REINA</div>
+                <div class="btn-grid">
+                    <button class="btn" onclick="game.buyUnit('worker')">
+                        <span style="font-size:1.5rem">🐜</span><br>Obrera<br><small>3L 3W</small>
+                    </button>
+                    <button class="btn" onclick="game.upgrade()">
+                        <span style="font-size:1.5rem">⚡</span><br>Nivel<br><small id="ui-up-cost">100L</small>
+                    </button>
                 </div>
             </div>
 
-            <div class="tool-group">
-                <small>BUILD</small>
-                <div class="btn-row">
-                    <button onclick="setHerramienta('crear-normal')" id="btn-crear-normal" class="btn-tool">HALL</button>
-                    <button onclick="setHerramienta('crear-comida')" id="btn-crear-comida" class="btn-tool" style="color:#4CAF50">FOOD</button>
-                    <button onclick="setHerramienta('crear-agua')" id="btn-crear-agua" class="btn-tool" style="color:#2196F3">H2O</button>
+            <div class="panel-sec wide">
+                <div class="sec-title">CONSTRUCCIÓN</div>
+                <div class="btn-grid">
+                    <button class="btn" onclick="game.setTool('connect')">🔗 Unir<br><small>2L</small></button>
+                    <button class="btn" onclick="game.setTool('chamber')">🕳️ Túnel<br><small>5L</small></button>
+                    <button class="btn" onclick="game.setTool('farm')">🍃 Granja<br><small>10L</small></button>
+                    <button class="btn" onclick="game.setTool('source')">💧 Fuente<br><small>10L</small></button>
+                    <button class="btn" onclick="game.setTool('fungi')">🍄 Hongo<br><small>15L</small></button>
+                    <button class="btn" onclick="game.setTool('barracks')">⚔️ Cuartel<br><small>20L</small></button>
                 </div>
             </div>
 
-            <div class="tool-group">
-                <small>SPAWN (3🍃 3💧)</small>
-                <div class="btn-row">
-                    <button onclick="agregarHormiga('obrera')" class="btn-action">WORKER</button>
-                    <button onclick="agregarHormiga('luchadora')" class="btn-action btn-soldier">SOLDIER</button>
+            <div class="panel-sec">
+                <div class="sec-title">ORDENES</div>
+                <div class="btn-grid">
+                    <button class="btn attack" id="btn-attack" onclick="game.toggleAttack()">🚩 ATAQUE</button>
+                    <button class="btn demolish" onclick="game.setTool('demolish')">💣 Borrar</button>
                 </div>
+                <div id="msg-box">Bienvenido, Comandante.</div>
             </div>
         </div>
     </div>
 
-    <canvas id="lienzo"></canvas>
-    <script src="script.js"></script>
+    <canvas id="gameCanvas"></canvas>
+    <script src="game.js"></script>
 </body>
 </html>
